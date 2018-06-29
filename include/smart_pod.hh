@@ -3,6 +3,7 @@
 
 
 #include <string.h>
+#include <type_traits>
 
 
 #if __COUNTER__ + 1 == __COUNTER__
@@ -96,8 +97,33 @@ public:
 
 
 namespace dumper {
+    template <typename T> class json;
+    template <typename T> class json_number;
+}
 
 template <typename T>
+typename std::enable_if<!std::is_arithmetic<T>::value,
+                        dumper::json<T>
+                       >::type
+json_dumper(const T& x)
+{
+    return dumper::json<T>(x);
+}
+
+template <typename T>
+typename std::enable_if<std::is_arithmetic<T>::value,
+                        dumper::json_number<T>
+                       >::type
+json_dumper(T x)
+{
+    return dumper::json_number<T>(x);
+}
+
+
+
+namespace dumper {
+
+    template <typename T>
     class json
     {
     public:
@@ -113,16 +139,16 @@ template <typename T>
         template <typename Os>
         Os& dump_to(Os& os, index<-1>) const
         {
-            return os << m_pod.name() << " = {";
+            return os;
         }
 
         template <typename Os, int i>
         Os& dump_to(Os& os, index<i>) const
         {
             return this->dump_to(os, index<i - 1>())
-                << (i ? ",." : ".")
+                << (i ? ',' : '{')
                 << '"' << m_pod.name_at(index<i>()) << "\":"
-                << m_pod.value_at(index<i>());
+                << json_dumper(m_pod.value_at(index<i>()));
         }
 
         template <typename Os>
@@ -134,13 +160,84 @@ template <typename T>
         const T& m_pod;
     };
 
-} // namespace dumper
+    template <typename T>
+    class json_number
+    {
+    public:
+        json_number(T num) : m_num(num) {}
+        
+        template <typename Os>
+        Os& dump(Os& os) const
+        {
+            return os << m_num;
+        }
 
-template <typename T>
-dumper::json<T> json_dumper(const T& x)
-{
-    return dumper::json<T>(x);
-}
+    private:
+        T m_num;
+    };
+
+    class json_string
+    {
+    public:
+        json_string(const char *buf, size_t size)
+          : m_buf(buf), m_size(size)
+        {}
+        
+        template <typename Os>
+        Os& dump(Os& os) const
+        {
+            os << '"';
+
+            auto p = m_buf;
+            auto size = m_size;
+            for (; size && *p; size--, p++)
+            {
+                auto c = *p;
+                switch (c)
+                {
+                case '\\':
+                case '"':
+                    break;
+                case '\b':
+                    c = 'b';
+                    break;
+                case '\f':
+                    c = 'f';
+                    break;
+                case '\n':
+                    c = 'n';
+                    break;
+                case '\r':
+                    c = 'r';
+                    break;
+                case '\t':
+                    c = 't';
+                    break;
+                default:
+                    os << c;
+                    continue;
+                }
+                os << '\\' << c;
+            }
+
+            return os << '"';
+        }
+
+    private:
+        const char *m_buf;
+        size_t m_size;
+    };
+
+    template <size_t n>
+    class json<char[n]> : public json_string
+    {
+    public:
+        json(const char buf[n])
+          : json_string(buf, n)
+        {}
+    };
+
+} // namespace dumper
 
 } // namespace spod
 
