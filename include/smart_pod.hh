@@ -88,6 +88,7 @@ public:
         { \
             spod::assign(m_##Name, value); \
         } \
+        t_##Name& get_##Name() { return m_##Name; } \
     private:
 
 #define SMART_POD_END \
