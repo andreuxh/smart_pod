@@ -120,6 +120,8 @@ json_dumper(T x)
     return dumper::json_number<T>(x);
 }
 
+dumper::json_number<unsigned int> json_dumper(unsigned char x);
+dumper::json_number<signed int> json_dumper(signed char x);
 
 
 namespace dumper {
@@ -159,6 +161,29 @@ namespace dumper {
         }
 
         const T& m_pod;
+    };
+
+    template <typename T>
+    class json_array
+    {
+    public:
+        json_array(const T *ary, size_t size)
+          : m_ary(ary), m_size(size)
+        {}
+        
+        template <typename Os>
+        Os& dump(Os& os) const
+        {
+            for (size_t i = 0; i < m_size; i++)
+            {
+                os << (i ? ',' : '[') << json_dumper(m_ary[i]);
+            }
+            return os << ']';
+        }
+
+    private:
+        const T *m_ary;
+        size_t m_size;
     };
 
     template <typename T>
@@ -229,6 +254,15 @@ namespace dumper {
         size_t m_size;
     };
 
+    template <typename T, size_t n>
+    class json<T[n]> : public json_array<T>
+    {
+    public:
+        json(const T ary[n])
+          : json_array<T>(ary, n)
+        {}
+    };
+
     template <size_t n>
     class json<char[n]> : public json_string
     {
@@ -239,6 +273,18 @@ namespace dumper {
     };
 
 } // namespace dumper
+
+
+dumper::json_number<unsigned int> json_dumper(unsigned char x)
+{
+    return json_dumper((unsigned int)x);
+}
+
+dumper::json_number<signed int> json_dumper(signed char x)
+{
+    return json_dumper((signed int)x);
+}
+
 
 } // namespace spod
 
