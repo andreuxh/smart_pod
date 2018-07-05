@@ -68,5 +68,14 @@ int main()
     std::cout << spod::json_dumper(u8) << '\n';
     std::cout << spod::json_dumper(i8) << "\n\n";
 
+    bool b[] = {false, true};
+    std::cout << spod::json_dumper(b) << "\n\n";
+
+    int i = 33;
+    int *p = &i;
+    std::cout << spod::json_dumper(p) << '\n';
+    p = nullptr;
+    std::cout << spod::json_dumper(p) << "\n\n";
+
     return 0;
 };

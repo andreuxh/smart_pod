@@ -100,6 +100,7 @@ public:
 namespace dumper {
     template <typename T> class json;
     template <typename T> class json_number;
+    class json_boolean;
 }
 
 template <typename T>
@@ -120,6 +121,7 @@ json_dumper(T x)
     return dumper::json_number<T>(x);
 }
 
+dumper::json_boolean json_dumper(bool x);
 dumper::json_number<unsigned int> json_dumper(unsigned char x);
 dumper::json_number<signed int> json_dumper(signed char x);
 
@@ -254,6 +256,48 @@ namespace dumper {
         size_t m_size;
     };
 
+    class json_boolean
+    {
+    public:
+        json_boolean(bool x)
+          : m_val(x)
+        {}
+
+        template <typename Os>
+        Os& dump(Os& os) const
+        {
+            return os << (m_val ? "true" : "false");
+        }
+
+    private:
+        bool m_val;
+    };
+
+    template <typename T>
+    class json_optional
+    {
+    public:
+        json_optional(const T *p)
+          : m_ptr(p)
+        {}
+
+        template <typename Os>
+        Os& dump(Os& os) const
+        {
+            if (m_ptr)
+            {
+                return os << json_dumper(*m_ptr);
+            }
+            else
+            {
+                return os << "null";
+            }
+        }
+
+    private:
+        const T *m_ptr;
+    };
+
     template <typename T, size_t n>
     class json<T[n]> : public json_array<T>
     {
@@ -272,8 +316,22 @@ namespace dumper {
         {}
     };
 
+    template <typename T>
+    class json<T*> : public json_optional<T>
+    {
+    public:
+        json(const T *x)
+          : json_optional<T>(x)
+        {}
+    };
+
 } // namespace dumper
 
+
+dumper::json_boolean json_dumper(bool x)
+{
+    return dumper::json_boolean(x);
+}
 
 dumper::json_number<unsigned int> json_dumper(unsigned char x)
 {
