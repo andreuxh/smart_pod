@@ -64,19 +64,23 @@ public:
     private: \
         enum { SPOD_BeginCount = SPOD_COUNTER + 1 };
 
-#define SPOD_RO_FIELD(Type, Name) \
+#define SPOD_FIELD_COMMON_(Type, Name, BitWidth_Suffix) \
     private: \
         enum { i_##Name = SPOD_COUNTER - SPOD_BeginCount }; \
         using t_##Name = Type; \
-        t_##Name m_##Name; \
+        t_##Name m_##Name BitWidth_Suffix; \
     public: \
         static constexpr const char *type_at(spod::index<i_##Name>) \
             { return #Type; } \
         static constexpr const char *name_at(spod::index<i_##Name>) \
             { return #Name; } \
+    private:
+
+#define SPOD_RO_FIELD(Type, Name) \
+        SPOD_FIELD_COMMON_(Type, Name,) \
+    public: \
         const t_##Name& value_at(spod::index<i_##Name>) const \
             { return m_##Name; } \
-    public: \
         const t_##Name& get_##Name() const { return m_##Name; } \
     private:
 
@@ -89,6 +93,21 @@ public:
             spod::assign(m_##Name, value); \
         } \
         t_##Name& get_##Name() { return m_##Name; } \
+    private:
+
+#define SPOD_RO_BITFIELD(Type, Name, BitWidth) \
+        SPOD_FIELD_COMMON_(Type, Name, :BitWidth) \
+    public: \
+        Type value_at(spod::index<i_##Name>) const \
+            { return m_##Name; } \
+        Type get_##Name() const { return m_##Name; } \
+    private:
+
+#define SPOD_RW_BITFIELD(Type, Name, BitWidth) \
+        SPOD_RO_BITFIELD(Type, Name, BitWidth) \
+    public: \
+        void set_##Name(Type value) \
+            { m_##Name =  value; } \
     private:
 
 #define SMART_POD_END \

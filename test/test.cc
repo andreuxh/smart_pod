@@ -21,6 +21,15 @@ SMART_POD_END;
 
 static_assert(std::is_pod<point4d>::value, "point4d should be POD");
 
+SMART_POD(bits)
+    SPOD_RW_BITFIELD(int, i1, 1);
+    SPOD_RW_BITFIELD(bool, b1, 1);
+    SPOD_RW_BITFIELD(int, i3, 3);
+    SPOD_RW_BITFIELD(unsigned, u3, 3);
+SMART_POD_END;
+
+static_assert(std::is_pod<bits>::value, "bits should be POD");
+
 
 #include <stdint.h>
 
@@ -76,6 +85,13 @@ int main()
     std::cout << spod::json_dumper(p) << '\n';
     p = nullptr;
     std::cout << spod::json_dumper(p) << "\n\n";
+
+    bits bx;
+    bx.set_i1(-1);
+    bx.set_b1(true);
+    bx.set_i3(-4);
+    bx.set_u3(7);
+    std::cout << spod::json_dumper(bx) << "\n\n";
 
     return 0;
 };
