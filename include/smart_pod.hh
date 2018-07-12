@@ -1,8 +1,10 @@
 #ifndef SMART_POD_HH
 #define SMART_POD_HH
 
-
+#include <ctype.h>
+#include <stdio.h>
 #include <string.h>
+
 #include <type_traits>
 
 
@@ -261,7 +263,16 @@ namespace dumper {
                     c = 't';
                     break;
                 default:
-                    os << c;
+                    if (isascii(c) && iscntrl(c))
+                    {
+                        char buf[7];
+                        sprintf(buf, "\\u00%02X", c);
+                        os << buf;
+                    }
+                    else
+                    {
+                        os << c;
+                    }
                     continue;
                 }
                 os << '\\' << c;

@@ -93,5 +93,8 @@ int main()
     bx.set_u3(7);
     std::cout << spod::json_dumper(bx) << "\n\n";
 
+    std::cout << spod::json_dumper("\x1\x2\x1e\x1f\x20\x21\x7e\x7fé")
+              << "\n\n";
+
     return 0;
 };
