@@ -30,6 +30,13 @@ SMART_POD_END;
 
 static_assert(std::is_pod<bits>::value, "bits should be POD");
 
+SMART_POD(quux);
+    SPOD_RW_FIELD(double, val);
+    SPOD_DUMPER(spod::json_dumper);
+SMART_POD_END;
+
+static_assert(std::is_pod<quux>::value, "quux should be POD");
+
 
 #include <stdint.h>
 
@@ -95,6 +102,10 @@ int main()
 
     std::cout << spod::json_dumper("\x1\x2\x1e\x1f\x20\x21\x7e\x7fé")
               << "\n\n";
+
+    quux q;
+    q.set_val(12.34);
+    std::cout << q << "\n\n";
 
     return 0;
 };

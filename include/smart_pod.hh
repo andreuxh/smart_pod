@@ -112,6 +112,15 @@ public:
             { m_##Name =  value; } \
     private:
 
+#define SPOD_DUMPER(MakeDumper) \
+    public: \
+        template <typename Os> \
+        Os& dump(Os& os) const \
+        { \
+            return os << MakeDumper(*this); \
+        } \
+    private:
+
 #define SMART_POD_END \
     public: \
         enum { end_index = SPOD_COUNTER - SPOD_BeginCount }; \
